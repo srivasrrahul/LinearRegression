@@ -42,6 +42,49 @@ def linear_model_feature_lst(train_data,input_feature):
     #reg.fit(X_train,Y_train)
     return reg
 
+def multi_linear_model_feature_lst(train_data,input_features):
+    X_train = train_data[input_features]
+    Y_train = train_data[['price']]
+    reg = multi_linear_regression_manual(X_train,Y_train)
+    return reg
+
+
+def multi_linear_regression_manual(X,Y):
+    X = (X-X.mean())/X.std()
+    Y = (Y-Y.mean())/Y.std()
+    cols = X.shape[1]
+    #print("Cols " + str(cols))
+    W = np.zeros((cols, 1))
+    W = multi_linear_gradient_descent(W,X,Y,0.005,0.05)
+    return W
+
+
+
+def multi_linear_gradient_descent(W,X,Y,epsilon,step_size):
+    rss = calculate_rss_multi(W,X,Y)
+    #print("RSS is " + str(rss))
+    s = X.shape[0]
+    W_t = W
+    while rss > epsilon:
+        #print("rss is " + str(rss))
+        Y_estimate = np.dot(X,W)
+        diff = Y-Y_estimate
+        partial = -(1.0/s)*(2.0*np.dot(X.T,diff))
+        W_t -= step_size * partial
+        rss = calculate_rss_multi(W_t,X,Y)
+
+    print("Final RSS " + str(rss))
+    return W_t
+
+
+def calculate_rss_multi(W,X,Y):
+    s = X.shape[0]
+    Y_estimate = np.dot(X,W)
+    diff = Y-Y_estimate
+    #print("Diff " + str(diff))
+    return (1.0/s)*np.sqrt(np.dot(diff.T,diff))
+
+
 def calculate_rss(x,y,w_0,w_1):
     s = x.shape[0]
     #print(s)
@@ -131,7 +174,11 @@ def predict_feature_lst(reg,test_data,input_feature):
 #sqft basement is useless
 #yr-built is usless
 
-
+def augment_data(data):
+    data["bedrooms_squared"] = data.apply(lambda row : row['bedrooms']*row['bedrooms'],axis=1)
+    data["bed_bath_rooms"] = data.apply(lambda row : row['bedrooms']*row['bathrooms'],axis=1)
+    data["log_sqft_living"] = data.apply(lambda row : np.log(row['sqft_living']),axis=1)
+    data["lat_plus_long"] = data.apply(lambda row : row['lat'] + row['long'],axis=1)
 
 def test_data(df):
     #plt.scatter(df['bedrooms'],df['price'],label = 'bedrooms',color='red')
@@ -144,11 +191,30 @@ def test_data(df):
 df = read_file("/Users/rasrivastava/Downloads/kc_house_data.csv")
 #test_data(df)
 print("Starting Training")
+augment_data(df)
+print("Bedroom square mean " + str(df['bedrooms_squared'].mean()))
+print("Bedbath mean" + str(df['bed_bath_rooms'].mean()))
+print("log_sqft_living mean" + str(df['log_sqft_living'].mean()))
+print("lat_plus_long mean" + str(df['lat_plus_long'].mean()))
+#print(df)
 train_data,test_data = get_training_test_set(df,0.80)
+
+W1 = multi_linear_model_feature_lst(train_data,["sqft_living","bedrooms","bathrooms","lat","long"])
+print(W1)
+
+print("=============================")
+W2 = multi_linear_model_feature_lst(train_data,["sqft_living","bedrooms","bathrooms","lat","long","bed_bath_rooms"])
+print(W2)
+
+print("=============================")
+W3 = multi_linear_model_feature_lst(train_data,["sqft_living","bedrooms","bathrooms","lat","long","bed_bath_rooms","bedrooms_squared","log_sqft_living","lat_plus_long"])
+print(W3)
+
 #print(train_data)
 #reg = linear_model(train_data)
-reg = linear_model_feature_lst(train_data,["sqft_living"])
-print(reg)
+#reg = linear_model_feature_lst(train_data,["sqft_living"])
+#print(reg)
+#
 #print("Coefficient " + str(reg.coef_))
 #print("Intercept " + str(reg.intercept_))
 #print("End Training")
