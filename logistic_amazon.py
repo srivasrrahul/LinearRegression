@@ -57,12 +57,14 @@ def create_testable_data_sets(data,words):
     return X_train, X_test, Y_train, Y_test
 
 
-def run_ll(X_train,Y_train) :
-    log_model = LogisticRegression()
+def run_ll(X_train,Y_train,_lambda) :
+    c = 1/_lambda
+    log_model = LogisticRegression(penalty='l2',C=c)
     log_model.fit(X_train, Y_train)
     return log_model
 
 def validate(log_model,X_test,Y_test):
+    #print(log_model)
     predictions = log_model.predict(X_test)
     print(classification_report(Y_test,predictions))
 
@@ -79,8 +81,11 @@ def test():
     data = extract_features(words,data)
     data.drop(['name','review','rating'],axis=1,inplace=True)
     X_train, X_test, Y_train, Y_test = create_testable_data_sets(data,words)
-    logModel = run_ll(X_train,Y_train)
-    validate(logModel,X_test,Y_test)
+    for _lambda in [0.0001,0.001,0.01,0.1,1,10.0,100.0,1000.0]:
+        logModel = run_ll(X_train,Y_train,_lambda)
+        validate(logModel,X_test,Y_test)
+
+
 
 
 test()
