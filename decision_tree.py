@@ -59,7 +59,8 @@ def update_cols(loan,col_name,unique_col_values):
 
 def apply_one_hot_encoding(loans,col_name):
     unique_cols = loans[col_name].unique()
-    #print(unique_cols)
+    unique_cols = list(map(lambda x : col_name + "_" + x,unique_cols))
+    print(unique_cols)
     cols_df = pd.get_dummies(unique_cols,drop_first=False)
     loans = pd.concat([loans,cols_df],axis=1)
     loans = loans.apply(lambda loan : update_cols(loan,col_name,unique_cols),axis=1)
@@ -74,7 +75,7 @@ def create_testable_data_sets(loans):
     return X_train, X_test, Y_train, Y_test
 
 def run_dtree(X,Y):
-    clf = tree.DecisionTreeClassifier()
+    clf = tree.DecisionTreeClassifier(max_depth = 5)
     clf = clf.fit(X, Y)
     return clf
 
@@ -110,10 +111,13 @@ def test():
     loans = apply_one_hot_encoding(loans,'term')
     X_train, X_test, Y_train, Y_test = create_testable_data_sets(loans)
     clf = run_dtree(X_train,Y_train)
+    tree.export_graphviz(clf,out_file='tree.dot',max_depth=5,feature_names = list(X_train.columns.values))
+
+    #print(clf)
     validate(clf,X_test,Y_test)
     print("===============")
-    ll = run_ll(X_train,Y_train,0.1)
-    validate(ll,X_test,Y_test)
+    #ll = run_ll(X_train,Y_train,0.1)
+    #validate(ll,X_test,Y_test)
     #print(X_train)
 
 
