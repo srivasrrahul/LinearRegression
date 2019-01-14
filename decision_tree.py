@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn import tree
+from sklearn.ensemble import GradientBoostingClassifier
 
 # features = ['grade',                     # grade of the loan
 #             'sub_grade',                 # sub-grade of the loan
@@ -91,6 +92,11 @@ def run_ll(X_train,Y_train,_lambda) :
     return log_model
 
 
+def gradient_boosting(X,Y):
+    clf = GradientBoostingClassifier()
+    clf = clf.fit(X,Y)
+    return clf
+
 def test():
     loans = read_csv_file("/Users/rasrivastava/DATA_SETS/LENDING_CLUB/lending-club-data.csv")
     loans['safe_loans'] = loans['bad_loans'].apply(lambda x : 1 if x==0 else -1)
@@ -116,8 +122,8 @@ def test():
     #print(clf)
     validate(clf,X_test,Y_test)
     print("===============")
-    #ll = run_ll(X_train,Y_train,0.1)
-    #validate(ll,X_test,Y_test)
+    gclf = gradient_boosting(X_train,Y_train)
+    validate(gclf,X_test,Y_test)
     #print(X_train)
 
 
